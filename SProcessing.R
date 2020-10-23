@@ -3,10 +3,23 @@ library("MALDIquantForeign")
 library("stringr")
 library("dplyr")
 
-
-Generate_Peaks_Meta <- function(Dp="newdata", filein="Filered_Meta1.csv", fileout="Filered_Meta_Peaks.csv",
-                                     t="sqrt", smooth="SavitzkyGolay", baseline="SNIP", normalization="TIC", 
-                                     Iter=100, SN_R=2, minFreq=0.25, align=TRUE){
+#' @Description Detect_Peaks is a pipeline with two stages: 1) import and processing of Maldi_Tof spectra and 2) peak detection 
+#'              details: 1) import, check of quality, transformation, smoothing, baseline removing, normalization, and alignment of Maldi_Tof spectra
+#'              details: 2) peak detection, binning, filtering and merging with metadata ("Filered_Meta.csv")
+#' @param       Dp: folder containing the ".mzXML" files, filein: metadata input csv file, fileout: output csv file, 
+#' @param       keyCode: code for dataframe joining (default:"Identifiant_MALDI"), 
+#' @param       speColumn: name of isolate column ("Taxonomie"),
+#' @param       t: spectrum transformation, smooth: smoothing method, baseline: bs removing method, normalization: normalization algorithm
+#' @param       Iter: iterations for baseline removing (100) SN_R:signal_to_noise ratio (2), 
+#' @param       minFreq: the minimum peak frequency for spectrum selection (0.25), 
+#' @param       align: boolean Boolean parameter to indicate whether or not spectrum alignment is performed 
+#' @return      merged dataframes and csv file
+#' @examples  df_Peaks<-Detect_Peaks("newdata", "Filered_Meta.csv", "Filered_Meta_Peaks.csv"), 
+#'            df_Peaks_0<-Detect_Peaks("newdata", "Filered_Meta.csv", "Filered_Meta_Peaks_0.csv", minFreq=0, align=FALSE)
+#'            df_PeaksTH<-Detect_Peaks("newdata", "Filered_Meta.csv", "Filered_Meta_Peaks.csv", baseline="TopHat")
+Detect_Peaks <- function(Dp, filein, fileout, keyCode="Identifiant_MALDI",speColumn="Taxonomie",
+                           t="sqrt", smooth="SavitzkyGolay", baseline="SNIP", normalization="TIC", 
+                           Iter=100, SN_R=2, minFreq=0.25, align=TRUE){
 
 if (!dir.exists(Dp))  { warning("this directory does not exist in the current working directory") }
   else {
@@ -31,7 +44,7 @@ if (!dir.exists(Dp))  { warning("this directory does not exist in the current wo
       spectra <- smoothIntensity(fiedler2009subset, method="MovingAverage", halfWindowSize=2, weighted=TRUE)
   
   if (baseline=="SNIP")
-        spectraRB <- removeBaseline(spectra, method="SNIP", iterations=100)
+        spectraRB <- removeBaseline(spectra, method="SNIP", iterations=Iter)
   else if (baseline== "TopHat")
         spectraRB <- removeBaseline(spectra, method="TopHat")
   else if (baseline== "ConvexHull")
@@ -64,24 +77,25 @@ if (!dir.exists(Dp))  { warning("this directory does not exist in the current wo
   featureMatrix <- intensityMatrix(peaks, spectraRB)
   rownames(featureMatrix) <- codes
   featureMatrix <-cbind(featureMatrix, codes)
-  colnames(featureMatrix)[ncol(featureMatrix)]<-"Identifiant_MALDI"
+  colnames(featureMatrix)[ncol(featureMatrix)]<-keyCode
   df<-as.data.frame(featureMatrix)
   
-  df2<-read.csv(filein, sep=";", stringsAsFactors=FALSE)
-  colnames(df2)[1]<-"Identifiant_MALDI"
-  colnames(df2)[2]<-"Taxonomie"
-
-  df_m <- inner_join(df2, df, by = 'Identifiant_MALDI')
-  gen<-unlist(strsplit(df_m[1, 2], split = " "))[1]
-   for (row in 2:nrow(df_m)) {
-     gen <- c(gen, unlist(strsplit(df_m[row, 2], split = " "))[1])
+  df2<-read.csv(filein, stringsAsFactors=FALSE)  #sep=";", 
+  colnames(df2)[1]<-keyCode
+  colnames(df2)[2]<-speColumn
+  print(dim(df))
+  print(dim(df2))
+  df_p <- inner_join(df2, df, by = keyCode)
+  gen<-unlist(strsplit(df_p[1, 2], split = " "))[1]
+   for (row in 2:nrow(df_p)) {
+     gen <- c(gen, unlist(strsplit(df_p[row, 2], split = " "))[1])
    }
-   df_m$Genre<-gen
-   df_m<-df_m[,c(1,2,ncol(df_m),4:ncol(df_m)-1)]
-   nr <- paste(df_m$Taxonomie,df_m$Identifiant_MALDI, sep="_")
-   rownames(df_m)<-nr
-   write.csv(df_m , fileout)
+   df_p$Genre<-gen
+   df_p<-df_p[,c(1,2,ncol(df_p),4:ncol(df_p)-1)]
+   nr <- paste(df_p$Taxonomie,df_p$Identifiant_MALDI, sep="_")
+   rownames(df_p)<-nr
+   write.csv(df_p , fileout)
   
-  return(df_m)
+  return(df_p)
   }
 }
