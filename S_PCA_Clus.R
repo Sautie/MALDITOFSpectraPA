@@ -10,7 +10,7 @@ PCA_Clus<-function(df_m, varCat1, varCat1="Genre", value="Lactobacillus", meth="
  #  dist: "euclidean" and "manhattan"
  # meth: "average" ([unweighted pair-]group [arithMetic] average method, aka ‘UPGMA’), "single" (single linkage), "complete" (complete linkage), "ward" (Ward's method), "weighted" (weighted average linkage, aka ‘WPGMA’), its generalization "flexible" which uses (a constant version of) the Lance-Williams formula
 # graph: "dendf", "dendh", "factorMapf", "factorMaph", "factorMapClus", 
-  ni <- 1
+ni <- 1
 nf <- 9
 if (varCat1 %in% colnames(df_m)) {
   if (value == "All")
