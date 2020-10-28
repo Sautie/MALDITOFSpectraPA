@@ -1,0 +1,19 @@
+Package: MaldiTOFSpectraPA
+Type: Package
+Title: Processing and analysis of MALDI_TOF spectra
+Version: 0.1.0
+Author: Miguel Sautié Castellanos
+Maintainer: Miguel Sautié Castellanos <miguel.sautie.castellanos@umontreal.ca>
+Description: Import and processing of MALDI_TOF spectra and metadata. Clustering of
+    MALDI_TOF spectra (significant peaks)and cluster validation.
+    Dendrograms, Correlograms, PCA and CMS.
+Depends: R (>= 4.0.0)
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Imports: ggplot2,FactoMineR, corrplot, fpc,NbClust, pvclust,
+        ape,factoextra, cluster, dendextend, tidyverse,
+        MALDIquant,MALDIquantForeign,readxl,dplyr,matrixStats,stringr,ggpubr
+RoxygenNote: 7.1.1
+NeedsCompilation: no
+Packaged: 2020-10-27 19:24:55 UTC; 14389
